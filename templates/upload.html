@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Video - Near-Miss Detection</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+  <main class="container">
+    <h1>Upload Traffic Video</h1>
+    <p class="muted">Step 1: Upload video. Step 2: Click location on map. Step 3: Run detection.</p>
+
+    {% if error %}
+      <div class="alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="card" id="uploadForm">
+      <label for="video">Traffic Video (MP4/MOV/AVI/MKV)</label>
+      <input id="video" name="video" type="file" accept="video/*" required />
+
+      <label for="location_name">Location Name (optional)</label>
+      <input id="location_name" name="location_name" type="text" placeholder="Example: MG Road Junction, Kochi" />
+
+      <label>Select Location on Map (required)</label>
+      <div id="map"></div>
+      <p id="coords" class="muted">No location selected</p>
+
+      <input type="hidden" id="latitude" name="latitude" required />
+      <input type="hidden" id="longitude" name="longitude" required />
+
+      <p id="processingStatus" class="muted"></p>
+      <button class="btn" type="submit" id="submitBtn">Process Video</button>
+    </form>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+</body>
+</html>

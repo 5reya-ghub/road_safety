@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Near-Miss Road Safety Detection</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+  <main class="container narrow">
+    <h1>AI Near-Miss Road Safety Detection System</h1>
+    <p>
+      Upload a road traffic video, tag its location on a map, and detect near-miss events using
+      YOLOv8 object detection, object tracking, and TTC-based risk estimation.
+    </p>
+    <a class="btn" href="{{ url_for('upload_video') }}">Start Analysis</a>
+  </main>
+</body>
+</html>

@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+uploads/*
+processed_videos/*
+!uploads/.gitkeep
+!processed_videos/.gitkeep

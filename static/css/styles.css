@@ -1,0 +1,147 @@
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --text: #17202a;
+  --muted: #5d6d7e;
+  --accent: #0f4c81;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #edf2f7 0%, #f7fafc 100%);
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.container.narrow {
+  max-width: 760px;
+  padding-top: 64px;
+}
+
+h1,
+h2 {
+  margin-top: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+label {
+  display: block;
+  margin: 12px 0 8px;
+  font-weight: 600;
+}
+
+input[type="file"],
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d9e0;
+}
+
+#map,
+#resultMap {
+  width: 100%;
+  height: 360px;
+  border-radius: 8px;
+  border: 1px solid #dce3ea;
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn:hover {
+  filter: brightness(0.92);
+}
+
+.alert {
+  background: #ffd8d8;
+  color: #7f1d1d;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.risk {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.risk-low {
+  background: #2c9a4b;
+}
+
+.risk-medium {
+  background: #d4a017;
+}
+
+.risk-high {
+  background: #d64545;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e9eef3;
+  text-align: left;
+  padding: 8px;
+  font-size: 14px;
+}
+
+video {
+  border-radius: 8px;
+  background: #000;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 14px;
+  }
+
+  #map,
+  #resultMap {
+    height: 300px;
+  }
+}
