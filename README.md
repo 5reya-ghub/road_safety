@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI Near-Miss Road Safety Detection System
 
 Hackathon-ready Flask prototype for near-miss road safety detection using uploaded videos, map-tagged location, YOLOv8 detection, centroid tracking, and TTC-based risk detection.
@@ -50,3 +51,6 @@ Hackathon-ready Flask prototype for near-miss road safety detection using upload
   - `distance_threshold` in pixels
   - `ttc_threshold` in seconds
 - This prototype uses pixel-space distance/speed and is intended for hackathon demo use.
+=======
+# road_safety
+>>>>>>> f5930184247e8eadd27625aef7def293a0edb89a
