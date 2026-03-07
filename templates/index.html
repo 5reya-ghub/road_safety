@@ -1,19 +1,144 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Near-Miss Road Safety Detection</title>
+  <title>NearMiss | Urban Intelligence</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  <style>
+    /* Catchy Urban Pulse Theme Additions */
+    :root {
+      --bg-dark: #0b0e14;
+      --card-bg: #161b22;
+      --accent-cyan: #00d1ff;
+      --accent-pink: #ff2e63;
+    }
+
+    #liveMap { 
+      height: 550px; 
+      width: 100%; 
+      border-radius: 12px; 
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .pulse-red {
+      animation: zone-pulse 2s infinite;
+    }
+
+    @keyframes zone-pulse {
+      0% { fill-opacity: 0.3; stroke-width: 2; }
+      50% { fill-opacity: 0.6; stroke-width: 5; }
+      100% { fill-opacity: 0.3; stroke-width: 2; }
+    }
+
+    /* Glassmorphism for Popups */
+    .leaflet-popup-content-wrapper {
+      background: rgba(22, 27, 34, 0.9) !important;
+      backdrop-filter: blur(10px);
+      color: white !important;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
 </head>
-<body>
-  <main class="container narrow">
-    <h1>AI Near-Miss Road Safety Detection System</h1>
-    <p>
-      Upload a road traffic video, tag its location on a map, and detect near-miss events using
-      YOLOv8 object detection, object tracking, and TTC-based risk estimation.
-    </p>
-    <a class="btn" href="{{ url_for('upload_video') }}">Start Analysis</a>
+<body style="background-color: var(--bg-dark); color: white;">
+
+  <main class="container narrow page">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('index') }}" style="color: white; text-decoration: none; font-size: 1.5rem; font-weight: bold;">
+        Near<span style="color: var(--accent-cyan);">Miss</span>
+      </a>
+      <nav class="topnav">
+        <a href="{{ url_for('upload_video') }}">New Analysis</a>
+        <a href="{{ url_for('history') }}">History</a>
+        <a href="{{ url_for('dashboard') }}">City Dashboard</a>
+      </nav>
+    </header>
+
+    <section class="card hero hero-glow" style="background: var(--card-bg); padding: 30px; border-radius: 15px; margin-top: 20px;">
+      <h1 style="color: var(--accent-cyan);">Road Safety Intelligence</h1>
+      <p>Identifying systemic infrastructure risks through multi-case near-miss clustering.</p>
+      
+      <div class="metric-row" style="display: flex; gap: 15px; margin-top: 15px;">
+        <span class="metric-pill" style="background: rgba(0,209,255,0.1); color: var(--accent-cyan); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--accent-cyan);">
+            Active Risk Zones: {{ zones|length }}
+        </span>
+        <span class="metric-pill" style="background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
+            Mode: Area Clustering
+        </span>
+      </div>
+    </section>
+
+    <section class="card" style="background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 20px;">
+      <h2 class="section-title">Live Safety Map</h2>
+      <p class="muted">Zones appearing here have met the minimum threshold of multiple evidence uploads.</p>
+      <div id="liveMap"></div>
+    </section>
   </main>
+
+  <script id="zones-data" type="application/json">{{ zones | tojson }}</script>
+  
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // 1. Data Initialization
+    const zonesRaw = document.getElementById('zones-data').textContent;
+    const zones = JSON.parse(zonesRaw);
+
+    // 2. Map Setup (Centered on Thiruvaniyoor/Puthencruz area)
+    const map = L.map('liveMap').setView([9.9639, 76.4084], 14);
+
+    // 3. Catchy Dark Mode Tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    }).addTo(map);
+
+    // 4. Plotting logic
+    zones.forEach(zone => {
+      // Draw the zone
+      const circle = L.circle([zone.zone_lat, zone.zone_lng], {
+        color: zone.color,
+        fillColor: zone.color,
+        fillOpacity: 0.4,
+        radius: 150, // 150m radius for the risk zone
+        className: (zone.zone_risk === 'Dangerous' || zone.zone_risk === 'High Risk') ? 'pulse-red' : ''
+      }).addTo(map);
+
+      // Popup Content
+      circle.bindPopup(`
+        <div style="min-width: 200px;">
+          <h3 style="margin:0 0 10px 0; color:${zone.color}; font-size: 1.1rem;">
+            ${zone.zone_risk} RISK ZONE
+          </h3>
+          <p style="margin: 5px 0;"><b>Location:</b> ${zone.location_name}</p>
+          <p style="margin: 5px 0;"><b>Evidence Clips:</b> ${zone.number_of_videos}</p>
+          <p style="margin: 5px 0;"><b>Total Near Misses:</b> ${zone.total_misses}</p>
+          <p style="margin: 5px 0;"><b>Pedestrian Conflicts:</b> ${zone.total_pedestrian_conflicts}</p>
+          <p style="margin: 5px 0;"><b>Location Risk Score:</b> ${zone.location_risk_score ?? 'N/A (need 3 clips)'}</p>
+          <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+          <a href="/history" style="color: #00d1ff; text-decoration: none; font-weight: bold;">
+            Explore Data Details →
+          </a>
+        </div>
+      `);
+    });
+
+    // 5. Map scale indicator
+    L.control.scale({ metric: true, imperial: false }).addTo(map);
+
+    // 6. Risk legend indicator
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'map-legend');
+      div.innerHTML = `
+        <div class="legend-item"><span class="legend-dot legend-dangerous"></span>Dangerous</div>
+        <div class="legend-item"><span class="legend-dot legend-high"></span>High Risk</div>
+        <div class="legend-item"><span class="legend-dot legend-moderate"></span>Moderate Risk</div>
+        <div class="legend-item"><span class="legend-dot legend-safe"></span>Safe</div>
+        <div class="legend-item"><span class="legend-dot legend-insufficient"></span>Insufficient Data</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  </script>
 </body>
 </html>

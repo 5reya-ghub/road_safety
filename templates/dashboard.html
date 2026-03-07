@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>City Dashboard - NearMiss</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+  <main class="container page">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('index') }}">Near<span>Miss</span></a>
+      <nav class="topnav">
+        <a href="{{ url_for('upload_video') }}">New Analysis</a>
+        <a href="{{ url_for('history') }}">History</a>
+      </nav>
+    </header>
+
+    <section class="card hero hero-glow">
+      <h1>City-Wide Risk Dashboard</h1>
+      <p>Interactive zone map for hotspot discovery, planning decisions, and historical trend reviews.</p>
+    </section>
+
+    <section class="card">
+      <div id="cityMap"></div>
+    </section>
+  </main>
+
+  <script id="reports-data" type="application/json">{{ reports | default([], true) | tojson }}</script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let reports = [];
+    try {
+      const reportsRaw = document.getElementById('reports-data')?.textContent || '[]';
+      reports = JSON.parse(reportsRaw);
+    } catch (err) {
+      console.error('Failed to parse reports JSON:', err);
+      reports = [];
+    }
+
+    const startCoord = reports.length > 0 ? [reports[0].latitude, reports[0].longitude] : [9.9312, 76.2673];
+
+    const map = L.map('cityMap').setView(startCoord, 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const getColor = (level) => {
+      if (level === 'HIGH') return '#ff2e63';
+      if (level === 'MEDIUM') return '#00d1ff';
+      return '#26d07c';
+    };
+
+    reports.forEach((report) => {
+      if (report.latitude != null && report.longitude != null) {
+        const color = getColor(report.risk_level);
+        L.circleMarker([report.latitude, report.longitude], {
+          radius: 10,
+          fillColor: color,
+          color: '#e8fcff',
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.85
+        })
+          .addTo(map)
+          .bindPopup(`
+            <strong>${report.location_name || 'Unknown'}</strong><br>
+            Risk: <span style="color:${color};font-weight:700;">${report.risk_level || 'LOW'}</span><br>
+            Near Misses: ${report.near_miss_count ?? 0}<br>
+            <small>${report.timestamp || ''}</small>
+          `);
+      }
+    });
+
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML += '<div><i style="background:#ff2e63"></i>High Risk</div>';
+      div.innerHTML += '<div><i style="background:#00d1ff"></i>Medium Risk</div>';
+      div.innerHTML += '<div><i style="background:#26d07c"></i>Low Risk</div>';
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>
