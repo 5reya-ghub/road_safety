@@ -23,3 +23,17 @@ const marker = L.circleMarker([data.lat, data.lng], {
 }).addTo(map);
 
 marker.bindPopup(`${data.locationName}<br>Risk: ${data.riskLevel}`).openPopup();
+
+const video = document.getElementById("annotatedVideo");
+const jumpButtons = document.querySelectorAll(".jump-btn");
+if (video && jumpButtons.length > 0) {
+  jumpButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const t = Number(btn.dataset.jumpS || "0");
+      if (Number.isFinite(t)) {
+        video.currentTime = Math.max(0, t);
+        video.play().catch(() => {});
+      }
+    });
+  });
+}

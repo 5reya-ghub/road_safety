@@ -1,93 +1,208 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Results - Near-Miss Detection</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <title>Analysis Results - NearMiss</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
 </head>
 <body>
-  <main class="container">
-    <h1>Analysis Results</h1>
+  <main class="container page">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('index') }}">Near<span>Miss</span></a>
+      <nav class="topnav">
+        <a href="{{ url_for('upload_video') }}">New Analysis</a>
+        <a href="{{ url_for('history') }}">History</a>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      </nav>
+    </header>
+
+    <section class="card hero hero-glow">
+      <h1>Analysis Complete</h1>
+      <p>Review zone risk, near-miss incidents, and single-vehicle rash-driving indicators for this clip.</p>
+    </section>
 
     <section class="grid">
-      <div class="card">
-        <h2>Summary</h2>
-        <p><strong>Location:</strong> {{ result.location_name }}</p>
-        <p><strong>Coordinates:</strong> {{ '%.6f' | format(result.latitude) }}, {{ '%.6f' | format(result.longitude) }}</p>
-        <p><strong>Near Miss Events:</strong> {{ result.near_miss_count }}</p>
-        <p><strong>Risk Level:</strong> <span class="risk risk-{{ result.risk_level|lower }}">{{ result.risk_level }}</span></p>
-        <p><strong>Risk Score:</strong> {{ result.risk_score }}</p>
-        <p><strong>Events/Minute:</strong> {{ result.events_per_min }}</p>
-        <p><strong>Severe Events (TTC ≤ 0.6s):</strong> {{ result.severe_events }}</p>
-        <p><strong>Clip Duration:</strong> {{ result.duration_s }} s</p>
-        <p><strong>Distance Threshold:</strong> {{ result.distance_threshold_px }} px</p>
-        <p><strong>Edge Distance Threshold:</strong> {{ result.edge_distance_threshold_px }} px</p>
-        <p><strong>TTC Threshold:</strong> {{ result.ttc_threshold_s }} s</p>
+      <div class="card list">
+        <h2 class="section-title">Safety Summary</h2>
+        <p><strong>Location:</strong> {{ result.location_name if result.location_name else 'Unknown' }}</p>
+        <p><strong>Coordinates:</strong> {{ "%.6f"|format(result.latitude|float) if result.latitude is not none else "0.000000" }}, {{ "%.6f"|format(result.longitude|float) if result.longitude is not none else "0.000000" }}</p>
+        <p><strong>Near Miss Events:</strong> {{ result.near_miss_count|default(0) }}</p>
+        <p><strong>Risk Level:</strong> <span class="risk risk-{{ result.risk_level|lower if result.risk_level else 'low' }}">{{ result.risk_level|default('LOW') }}</span></p>
+        <p><strong>Risk Score:</strong> {{ result.risk_score|default(0.0) }}</p>
+        <p><strong>Events/Minute:</strong> {{ result.events_per_min|default(0) }}</p>
+        <p><strong>Severe Events (TTC &lt;= 0.6s):</strong> {{ result.severe_events|default(0) }}</p>
+        <p><strong>Rash Driving Detected:</strong> {{ 'YES' if result.rash_driving_detected else 'NO' }}</p>
+        <p><strong>Rash Driving Risk Score:</strong> {{ result.rash_risk_score|default(0.0) }}</p>
+        {% if result.zone_risk_note %}
+        <p class="alert"><strong>Zone Map Note:</strong> {{ result.zone_risk_note }}</p>
+        {% endif %}
       </div>
 
       <div class="card">
-        <h2>Location Risk Map</h2>
-        <div id="resultMap"></div>
+        <h2 class="section-title">Location Context</h2>
+        <div
+          id="resultMap"
+          data-lat="{{ result.latitude if result.latitude is not none else 0.0 }}"
+          data-lng="{{ result.longitude if result.longitude is not none else 0.0 }}"
+          data-location-name="{{ result.location_name if result.location_name else 'Current Location' }}"
+          data-risk="{{ result.risk_level if result.risk_level else 'LOW' }}"
+          data-marker-color="{{ result.risk_marker_color if result.risk_marker_color else 'blue' }}"
+        ></div>
       </div>
     </section>
 
     <section class="card">
-      <h2>Annotated Video</h2>
-      <video controls width="100%">
+      <h2 class="section-title">Annotated Video</h2>
+      {% if video_filename %}
+      <video id="annotatedVideo" controls width="100%">
         <source src="{{ url_for('processed_video', filename=video_filename) }}" type="video/mp4" />
+        Your browser does not support the video tag.
       </video>
-    </section>
-
-    <section class="card">
-      <h2>Near-Miss Events (TTC-based)</h2>
-      {% if result.events and result.events|length > 0 %}
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Frame</th>
-            <th>Time (s)</th>
-            <th>Pair</th>
-            <th>Distance (px)</th>
-            <th>Edge Distance (px)</th>
-            <th>Relative Speed (px/s)</th>
-            <th>TTC (s)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for e in result.events %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ e.frame }}</td>
-            <td>{{ e.timestamp_s }}</td>
-            <td>{{ e.object_a }} {{ e.id_a }} vs {{ e.object_b }} {{ e.id_b }}</td>
-            <td>{{ e.distance_px }}</td>
-            <td>{{ e.edge_distance_px }}</td>
-            <td>{{ e.relative_speed_px_s }}</td>
-            <td>{{ e.ttc_s }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
       {% else %}
-      <p>No near-miss events detected for this video.</p>
+      <p class="alert">Error: Video file not found.</p>
       {% endif %}
     </section>
 
-    <a class="btn" href="{{ url_for('upload_video') }}">Analyze Another Video</a>
+    {% if result.motion_segments and result.motion_segments|length > 0 %}
+    <section class="card">
+      <h2 class="section-title">Jump To Motion</h2>
+      <p class="muted">Jump directly to time windows where objects were detected.</p>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Duration (s)</th>
+              <th>Jump</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for seg in result.motion_segments %}
+            <tr>
+              <td>{{ seg.index }}</td>
+              <td>{{ seg.start_hms }}</td>
+              <td>{{ seg.end_hms }}</td>
+              <td>{{ seg.duration_s }}</td>
+              <td><button class="btn jump-btn" data-jump-s="{{ seg.start_s }}" type="button">Jump</button></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="card">
+      <h2 class="section-title">Near-Miss Event Log</h2>
+      {% if result.events and result.events|length > 0 %}
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Time (s)</th>
+              <th>Interaction Pair</th>
+              <th>TTC (s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in result.events %}
+            <tr>
+              <td>{{ e.timestamp_s|default('0.0') }}</td>
+              <td>{{ e.object_a }} {{ e.id_a|default('') }} vs {{ e.object_b }} {{ e.id_b|default('') }}</td>
+              <td>{{ e.ttc_s }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted">No high-risk near-misses detected in this clip.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Rash Driving Events</h2>
+      {% if result.rash_events and result.rash_events|length > 0 %}
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Time (s)</th>
+              <th>Vehicle</th>
+              <th>Speed (px/s)</th>
+              <th>Acceleration (px/s2)</th>
+              <th>Heading Change (deg)</th>
+              <th>Rash Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in result.rash_events %}
+            <tr>
+              <td>{{ e.timestamp_s }}</td>
+              <td>{{ e.object }} {{ e.id }}</td>
+              <td>{{ e.speed_px_s }}</td>
+              <td>{{ e.accel_px_s2 }}</td>
+              <td>{{ e.heading_change_deg }}</td>
+              <td>{{ e.rash_score }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted">No rash-driving events detected for individual vehicles.</p>
+      {% endif %}
+    </section>
+
+    <div class="action-row" style="padding-bottom: 30px;">
+      <a class="btn" href="{{ url_for('upload_video') }}">Analyze New Footage</a>
+      <a class="btn-secondary" href="{{ url_for('history') }}">View History</a>
+      <a class="btn-secondary" href="{{ url_for('dashboard') }}">City Dashboard</a>
+    </div>
   </main>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    window.RESULT_DATA = {
-      lat: {{ result.latitude }},
-      lng: {{ result.longitude }},
-      locationName: {{ result.location_name|tojson }},
-      riskLevel: {{ result.risk_level|tojson }}
-    };
+    const mapEl = document.getElementById('resultMap');
+    const lat = Number(mapEl?.dataset?.lat || 0.0);
+    const lng = Number(mapEl?.dataset?.lng || 0.0);
+    const locName = mapEl?.dataset?.locationName || 'Current Location';
+    const risk = mapEl?.dataset?.risk || 'LOW';
+    const markerColor = mapEl?.dataset?.markerColor || 'blue';
+
+    try {
+      const map = L.map('resultMap').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      L.circleMarker([lat, lng], {
+        color: markerColor,
+        radius: 12,
+        fillOpacity: 0.7
+      }).addTo(map).bindPopup(`<b>${locName}</b><br>Risk: ${risk}`).openPopup();
+    } catch (e) {
+      console.error('Leaflet map failed to load:', e);
+      document.getElementById('resultMap').innerHTML = "<p style='padding:20px;'>Map failed to load.</p>";
+    }
+
+    const video = document.getElementById('annotatedVideo');
+    const jumpButtons = document.querySelectorAll('.jump-btn');
+    if (video && jumpButtons.length > 0) {
+      jumpButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const t = Number(btn.dataset.jumpS || '0');
+          if (Number.isFinite(t)) {
+            video.currentTime = Math.max(0, t);
+            video.play().catch(() => {});
+          }
+        });
+      });
+    }
   </script>
-  <script src="{{ url_for('static', filename='js/result.js') }}"></script>
 </body>
 </html>

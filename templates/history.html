@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zone History - NearMiss</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+  <main class="container page">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('index') }}">Near<span>Miss</span></a>
+      <nav class="topnav">
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('upload_video') }}">New Analysis</a>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      </nav>
+    </header>
+
+    <section class="card hero">
+      <h1>Zone History & Evidence</h1>
+      <p>Browse archived reports, open evidence clips, and remove unwanted zones from your dataset.</p>
+    </section>
+
+    <section class="card">
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date &amp; Time</th>
+              <th>Location</th>
+              <th>Near Misses</th>
+              <th>Risk Level</th>
+              <th>Risk Score</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for report in reports %}
+            <tr>
+              <td>{{ report.timestamp }}</td>
+              <td>
+                <strong>{{ report.location_name }}</strong><br>
+                <small class="muted">{{ report.latitude }}, {{ report.longitude }}</small>
+              </td>
+              <td>{{ report.near_miss_count }}</td>
+              <td><span class="risk risk-{{ report.risk_level|lower }}">{{ report.risk_level }}</span></td>
+              <td>{{ report.risk_score }}</td>
+              <td>
+                <div class="action-row" style="margin-top:0;">
+                  <a href="{{ url_for('processed_video', filename=report.video_path) }}" class="btn" target="_blank">View Evidence</a>
+                  <form method="POST" action="{{ url_for('delete_report', report_id=report.id) }}" onsubmit="return confirm('Delete this zone from history? This action cannot be undone.');">
+                    <button type="submit" class="btn-danger">Delete Zone</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
