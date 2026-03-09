@@ -13,6 +13,14 @@ const coordsEl = document.getElementById("coords");
 const lookupStatusEl = document.getElementById("coordLookupStatus");
 const applyCoordsBtn = document.getElementById("applyCoordsBtn");
 const lookupLocationBtn = document.getElementById("lookupLocationBtn");
+const incidentTimeInput = document.getElementById("incident_time");
+
+if (incidentTimeInput && !incidentTimeInput.value) {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  incidentTimeInput.value = `${hh}:${mm}`;
+}
 
 function isValidCoordinatePair(lat, lng) {
   return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;

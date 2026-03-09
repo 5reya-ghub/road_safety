@@ -29,7 +29,7 @@
         <p><strong>Location:</strong> {{ result.location_name if result.location_name else 'Unknown' }}</p>
         <p><strong>Coordinates:</strong> {{ "%.6f"|format(result.latitude|float) if result.latitude is not none else "0.000000" }}, {{ "%.6f"|format(result.longitude|float) if result.longitude is not none else "0.000000" }}</p>
         <p><strong>Near Miss Events:</strong> {{ result.near_miss_count|default(0) }}</p>
-        <p><strong>Risk Level:</strong> <span class="risk risk-{{ result.risk_level|lower if result.risk_level else 'low' }}">{{ result.risk_level|default('LOW') }}</span></p>
+        <p><strong>Risk Level:</strong> <span class="risk risk-{{ result.risk_level|lower|replace(' ', '-') if result.risk_level else 'low' }}">{{ result.risk_level|default('LOW') }}</span></p>
         <p><strong>Risk Score:</strong> {{ result.risk_score|default(0.0) }}</p>
         <p><strong>Events/Minute:</strong> {{ result.events_per_min|default(0) }}</p>
         <p><strong>Severe Events (TTC &lt;= 0.6s):</strong> {{ result.severe_events|default(0) }}</p>
@@ -56,6 +56,13 @@
     <section class="card">
       <h2 class="section-title">Annotated Video</h2>
       {% if video_filename %}
+      <div class="action-row" style="margin-bottom: 10px;">
+        {% if result.motion_start_s is not none %}
+        <button class="btn skip-motion-btn" data-jump-s="{{ result.motion_start_s }}" type="button">
+          Skip to Motion ({{ result.motion_start_s }}s)
+        </button>
+        {% endif %}
+      </div>
       <video id="annotatedVideo" controls width="100%">
         <source src="{{ url_for('processed_video', filename=video_filename) }}" type="video/mp4" />
         Your browser does not support the video tag.
@@ -192,6 +199,7 @@
 
     const video = document.getElementById('annotatedVideo');
     const jumpButtons = document.querySelectorAll('.jump-btn');
+    const skipMotionBtn = document.querySelector('.skip-motion-btn');
     if (video && jumpButtons.length > 0) {
       jumpButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -201,6 +209,15 @@
             video.play().catch(() => {});
           }
         });
+      });
+    }
+    if (video && skipMotionBtn) {
+      skipMotionBtn.addEventListener('click', () => {
+        const t = Number(skipMotionBtn.dataset.jumpS || '0');
+        if (Number.isFinite(t)) {
+          video.currentTime = Math.max(0, t);
+          video.play().catch(() => {});
+        }
       });
     }
   </script>

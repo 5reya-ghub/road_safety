@@ -47,8 +47,9 @@
     }).addTo(map);
 
     const getColor = (level) => {
-      if (level === 'HIGH') return '#ff2e63';
-      if (level === 'MEDIUM') return '#00d1ff';
+      const token = String(level || '').trim().toLowerCase().replace(/[_-]/g, ' ').replace(/\s+/g, ' ');
+      if (['high', 'high risk', 'dangerous', 'critical', 'very high'].includes(token)) return '#ff2e63';
+      if (['medium', 'moderate', 'moderate risk', 'medium risk'].includes(token)) return '#ff9800';
       return '#26d07c';
     };
 

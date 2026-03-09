@@ -1,64 +1,40 @@
-﻿/* ==========================================================================
-   NearMiss - Urban Pulse Theme (Complete)
-   Author: Gemini AI | Road Safety Intelligence Platform
-   ========================================================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Color Architecture */
   --bg: #0b0e14;
   --surface: #161b22;
   --surface-soft: rgba(22, 27, 34, 0.62);
   --surface-strong: rgba(16, 21, 30, 0.9);
   --text: #eaf2ff;
   --muted: #97aac2;
-  --accent: #00d1ff; /* Cyan - Low Risk/Neutral */
-  --danger: #ff2e63; /* Pink/Red - High Risk */
-  --warning: #ffcc00; /* Yellow - Medium Risk */
-  --ok: #26d07c;     /* Green - Safe */
-  
-  /* Borders & Shadows */
-  --border: rgba(0, 209, 255, 0.15);
+  --accent: #00d1ff;
+  --danger: #ff2e63;
+  --ok: #26d07c;
+  --border: rgba(0, 209, 255, 0.28);
   --ring: rgba(0, 209, 255, 0.2);
   --shadow: 0 20px 40px rgba(0, 0, 0, 0.42);
-  --glow: 0 0 0 1px rgba(0, 209, 255, 0.1), 0 0 28px rgba(0, 209, 255, 0.1);
+  --glow: 0 0 0 1px rgba(0, 209, 255, 0.3), 0 0 28px rgba(0, 209, 255, 0.14);
 }
 
-/* --- Global Reset & Scroll --- */
 * {
   box-sizing: border-box;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--surface);
-  border-radius: 10px;
-}
-
-html, body {
+html,
+body {
   min-height: 100%;
 }
 
 body {
   margin: 0;
-  font-family: "Manrope", sans-serif;
+  font-family: "Manrope", "Segoe UI", sans-serif;
   color: var(--text);
-  background: 
-    radial-gradient(1200px 700px at 2% -20%, rgba(0, 209, 255, 0.15), transparent 55%),
-    radial-gradient(1000px 620px at 96% -15%, rgba(255, 46, 99, 0.1), transparent 52%),
+  background:
+    radial-gradient(1200px 700px at 2% -20%, rgba(0, 209, 255, 0.18), transparent 55%),
+    radial-gradient(1000px 620px at 96% -15%, rgba(255, 46, 99, 0.14), transparent 52%),
     linear-gradient(180deg, #090c12 0%, #0b0e14 100%);
-  background-attachment: fixed;
 }
 
-/* --- Layout Containers --- */
 .container {
   max-width: 1180px;
   margin: 0 auto;
@@ -74,29 +50,26 @@ body {
   gap: 18px;
 }
 
-/* --- Navigation Topbar --- */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 14px 20px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface-soft);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--glow);
-  margin-bottom: 20px;
 }
 
 .brand {
-  font-family: "Sora", sans-serif;
+  font-family: "Sora", "Trebuchet MS", sans-serif;
   letter-spacing: 0.03em;
   font-weight: 800;
   color: var(--text);
   text-decoration: none;
-  font-size: 1.2rem;
 }
 
 .brand span {
@@ -106,216 +79,101 @@ body {
 .topnav {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .topnav a {
   color: var(--muted);
   text-decoration: none;
-  padding: 8px 14px;
+  border: 1px solid transparent;
+  padding: 7px 10px;
   border-radius: 10px;
   font-weight: 600;
-  transition: all 0.2s ease;
 }
 
 .topnav a:hover {
-  color: var(--accent);
+  color: var(--text);
+  border-color: rgba(0, 209, 255, 0.35);
   background: rgba(0, 209, 255, 0.08);
 }
 
-/* --- Hero & Branding --- */
 .hero {
-  padding: 36px;
+  padding: 26px;
 }
 
 .hero h1 {
-  margin: 0 0 10px;
-  font-family: "Sora", sans-serif;
-  font-size: clamp(1.8rem, 4vw, 2.8rem);
-  background: linear-gradient(90deg, #fff, var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin: 0 0 8px;
+  font-family: "Sora", "Verdana", sans-serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.7rem);
+  line-height: 1.1;
 }
 
 .hero p {
   margin: 0;
   color: var(--muted);
-  font-size: 1.1rem;
-  max-width: 65ch;
-  line-height: 1.6;
+  max-width: 70ch;
 }
 
 .hero-glow {
-  border: 1px solid rgba(255, 46, 99, 0.2);
-  box-shadow: 0 0 30px rgba(255, 46, 99, 0.05);
+  border: 1px solid rgba(255, 46, 99, 0.26);
+  box-shadow: 0 0 0 1px rgba(255, 46, 99, 0.24), 0 0 28px rgba(255, 46, 99, 0.12);
 }
 
-/* --- Interactive Components --- */
+.metric-row {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.metric-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(0, 209, 255, 0.12);
+  border: 1px solid rgba(0, 209, 255, 0.34);
+  color: #dff7ff;
+  font-size: 0.92rem;
+}
+
 .card {
   background: var(--surface-soft);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 24px;
+  padding: 18px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--shadow);
+  box-shadow: var(--glow);
 }
 
-.metric-pill {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 20px;
-  background: rgba(0, 209, 255, 0.1);
-  border: 1px solid var(--border);
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-right: 8px;
+.section-title {
+  margin: 0 0 12px;
+  font-family: "Sora", "Verdana", sans-serif;
+  font-size: 1.16rem;
 }
 
-/* --- Maps & Leaflet UI --- */
-#map, #resultMap, #liveMap, #cityMap {
-  width: 100%;
-  height: 450px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 209, 255, 0.2);
+.grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
 }
 
-/* Catchy Glassmorphism Popup */
-.leaflet-popup-content-wrapper {
-    background: rgba(22, 27, 34, 0.85) !important;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white !important;
-}
-
-.leaflet-popup-tip {
-    background: rgba(22, 27, 34, 0.85) !important;
-}
-
-.map-legend {
-  background: rgba(22, 27, 34, 0.86);
-  color: #eaf2ff;
-  border: 1px solid rgba(0, 209, 255, 0.35);
-  border-radius: 10px;
-  padding: 8px 10px;
-  backdrop-filter: blur(8px);
-}
-
-.map-legend .legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  line-height: 1.5;
-  font-size: 0.9rem;
-}
-
-.map-legend .legend-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  display: inline-block;
-  flex: 0 0 12px;
-}
-
-.legend-dangerous { background: #ff2e63; }
-.legend-high { background: #ffcc00; }
-.legend-moderate { background: #00d1ff; }
-.legend-safe { background: #26d07c; }
-.legend-insufficient { background: #94a3b8; }
-
-.leaflet-control-scale-line {
-  border: 1px solid rgba(0, 209, 255, 0.5) !important;
-  border-top: none !important;
-  color: #eaf2ff !important;
-  background: rgba(22, 27, 34, 0.86) !important;
-}
-
-/* Pulse animation for High Risk Zones */
-@keyframes pulse {
-    0% { fill-opacity: 0.3; stroke-width: 2; }
-    50% { fill-opacity: 0.6; stroke-width: 5; }
-    100% { fill-opacity: 0.3; stroke-width: 2; }
-}
-
-.pulse-red {
-    animation: pulse 2s infinite;
-}
-
-/* --- Tables & Lists --- */
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin-top: 15px;
-}
-
-th {
-  background: rgba(0, 209, 255, 0.05);
-  padding: 12px;
-  text-align: left;
-  font-family: "Sora", sans-serif;
-  color: var(--accent);
-  border-bottom: 1px solid var(--border);
-}
-
-td {
-  padding: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-/* --- Risk Status --- */
-.risk {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.risk-low { color: var(--ok); background: rgba(38, 208, 124, 0.1); border: 1px solid var(--ok); }
-.risk-medium { color: var(--warning); background: rgba(255, 204, 0, 0.1); border: 1px solid var(--warning); }
-.risk-high { color: var(--danger); background: rgba(255, 46, 99, 0.1); border: 1px solid var(--danger); }
-
-/* --- Buttons --- */
-.btn {
-  display: inline-block;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--accent), #129bff);
-  color: #000;
-  font-weight: 700;
-  text-decoration: none;
-  border-radius: 12px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 209, 255, 0.3);
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border: 1px solid var(--border);
-}
-
-/* --- Media Queries --- */
-@media (max-width: 768px) {
-  .topbar { flex-direction: column; align-items: flex-start; }
-  .grid { grid-template-columns: 1fr; }
-  #map, #liveMap { height: 350px; }
-}
-
-/* --- Upload Coordinate Controls --- */
 .grid-2 {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
   gap: 18px;
+  grid-template-columns: 1.2fr 0.8fr;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+.list p {
+  margin: 0;
 }
 
 label {
@@ -326,26 +184,238 @@ label {
 
 input[type="file"],
 input[type="text"],
-input[type="number"] {
+input[type="number"],
+input[type="time"] {
   width: 100%;
   padding: 11px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 209, 255, 0.28);
-  background: rgba(9, 14, 22, 0.72);
+  border: 1px solid rgba(0, 209, 255, 0.35);
+  background: rgba(8, 13, 22, 0.7);
   color: var(--text);
 }
 
-.coord-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 209, 255, 0.35);
+  background: rgba(0, 209, 255, 0.18);
+  color: var(--text);
+  padding: 6px 10px;
 }
 
-.action-row {
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+#map,
+#resultMap,
+#liveMap,
+#cityMap {
+  width: 100%;
+  height: 390px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 209, 255, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), var(--shadow);
+}
+
+#liveMap,
+#cityMap {
+  height: 500px;
+}
+
+/* Map legend + scale visibility on bright basemaps */
+.map-legend {
+  background: rgba(18, 23, 32, 0.92);
+  color: #f2f8ff;
+  border: 1px solid rgba(0, 209, 255, 0.45);
+  border-radius: 10px;
+  padding: 8px 10px;
+  line-height: 1.35;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.map-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.map-legend .legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  display: inline-block;
+  flex: 0 0 12px;
+}
+
+.leaflet-control-scale-line {
+  background: rgba(16, 20, 30, 0.92) !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(255, 255, 255, 0.95) !important;
+  border-top: none !important;
+  font-weight: 700;
+  text-shadow: none !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.btn,
+.btn-secondary,
+.btn-danger,
+button.btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease, box-shadow 120ms ease;
+}
+
+.btn {
+  background: linear-gradient(92deg, #00d1ff 0%, #129bff 100%);
+  border-color: rgba(0, 209, 255, 0.44);
+  box-shadow: 0 12px 24px rgba(0, 209, 255, 0.24);
+}
+
+.btn-secondary {
+  background: linear-gradient(92deg, #334055 0%, #283244 100%);
+  border-color: rgba(151, 170, 194, 0.35);
+}
+
+.btn-danger {
+  background: linear-gradient(92deg, #ff2e63 0%, #db1f58 100%);
+  border-color: rgba(255, 46, 99, 0.5);
+  box-shadow: 0 12px 24px rgba(255, 46, 99, 0.26);
+}
+
+.btn:hover,
+.btn-secondary:hover,
+.btn-danger:hover,
+button.btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.jump-btn {
+  padding: 6px 10px;
+}
+
+.action-row,
+.navigation-links {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 10px;
+}
+
+.alert {
+  background: rgba(255, 46, 99, 0.16);
+  border: 1px solid rgba(255, 46, 99, 0.46);
+  color: #ffd4e2;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.risk {
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.risk-low {
+  border: 1px solid rgba(38, 208, 124, 0.5);
+  background: rgba(38, 208, 124, 0.2);
+}
+
+.risk-medium {
+  border: 1px solid rgba(0, 209, 255, 0.55);
+  background: rgba(0, 209, 255, 0.2);
+}
+
+.risk-high {
+  border: 1px solid rgba(255, 46, 99, 0.58);
+  background: rgba(255, 46, 99, 0.22);
+}
+
+.risk-moderate,
+.risk-moderate-risk {
+  border: 1px solid rgba(255, 152, 0, 0.55);
+  background: rgba(255, 152, 0, 0.2);
+}
+
+.risk-high-risk,
+.risk-dangerous {
+  border: 1px solid rgba(255, 46, 99, 0.58);
+  background: rgba(255, 46, 99, 0.22);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid rgba(0, 209, 255, 0.22);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+th,
+td {
+  border-bottom: 1px solid rgba(0, 209, 255, 0.15);
+  text-align: left;
+  padding: 10px;
+  font-size: 14px;
+}
+
+th {
+  font-family: "Sora", "Verdana", sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: #bcf0ff;
+  background: rgba(0, 209, 255, 0.08);
+}
+
+tr:hover td {
+  background: rgba(0, 209, 255, 0.06);
+}
+
+video {
+  border-radius: 14px;
+  background: #000;
+  border: 1px solid rgba(0, 209, 255, 0.34);
+  box-shadow: var(--shadow);
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip,
+.leaflet-control-zoom,
+.leaflet-control-attribution,
+.legend {
+  background: rgba(22, 27, 34, 0.72) !important;
+  color: #e8f5ff !important;
+  border: 1px solid rgba(0, 209, 255, 0.35) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--glow);
+}
+
+.legend {
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.legend i {
+  width: 13px;
+  height: 13px;
+  display: inline-block;
+  border-radius: 50%;
+  margin-right: 8px;
 }
 
 @media (max-width: 920px) {
@@ -354,8 +424,20 @@ input[type="number"] {
   }
 }
 
-@media (max-width: 768px) {
-  .coord-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 720px) {
+  .container {
+    padding: 14px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #map,
+  #resultMap,
+  #liveMap,
+  #cityMap {
+    height: 320px;
   }
 }

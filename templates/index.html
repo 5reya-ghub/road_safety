@@ -6,48 +6,11 @@
   <title>NearMiss | Urban Intelligence</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
-  <style>
-    /* Catchy Urban Pulse Theme Additions */
-    :root {
-      --bg-dark: #0b0e14;
-      --card-bg: #161b22;
-      --accent-cyan: #00d1ff;
-      --accent-pink: #ff2e63;
-    }
-
-    #liveMap { 
-      height: 550px; 
-      width: 100%; 
-      border-radius: 12px; 
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .pulse-red {
-      animation: zone-pulse 2s infinite;
-    }
-
-    @keyframes zone-pulse {
-      0% { fill-opacity: 0.3; stroke-width: 2; }
-      50% { fill-opacity: 0.6; stroke-width: 5; }
-      100% { fill-opacity: 0.3; stroke-width: 2; }
-    }
-
-    /* Glassmorphism for Popups */
-    .leaflet-popup-content-wrapper {
-      background: rgba(22, 27, 34, 0.9) !important;
-      backdrop-filter: blur(10px);
-      color: white !important;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-  </style>
 </head>
 <body style="background-color: var(--bg-dark); color: white;">
-
   <main class="container narrow page">
     <header class="topbar">
-      <a class="brand" href="{{ url_for('index') }}" style="color: white; text-decoration: none; font-size: 1.5rem; font-weight: bold;">
-        Near<span style="color: var(--accent-cyan);">Miss</span>
-      </a>
+      <a class="brand" href="{{ url_for('index') }}">Near<span>Miss</span></a>
       <nav class="topnav">
         <a href="{{ url_for('upload_video') }}">New Analysis</a>
         <a href="{{ url_for('history') }}">History</a>
@@ -55,90 +18,119 @@
       </nav>
     </header>
 
-    <section class="card hero hero-glow" style="background: var(--card-bg); padding: 30px; border-radius: 15px; margin-top: 20px;">
-      <h1 style="color: var(--accent-cyan);">Road Safety Intelligence</h1>
-      <p>Identifying systemic infrastructure risks through multi-case near-miss clustering.</p>
-      
+    <section class="card hero hero-glow">
+      <h1>Road Safety Intelligence</h1>
+      <p>Map shows aggregated location risk for the selected time period.</p>
+
       <div class="metric-row" style="display: flex; gap: 15px; margin-top: 15px;">
-        <span class="metric-pill" style="background: rgba(0,209,255,0.1); color: var(--accent-cyan); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--accent-cyan);">
-            Active Risk Zones: {{ zones|length }}
-        </span>
-        <span class="metric-pill" style="background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
-            Mode: Area Clustering
-        </span>
+        <span class="metric-pill">Active Zones: <span id="zoneCount">{{ zones|length }}</span></span>
+        <span class="metric-pill">Selected Bucket: <span id="currentBucket">{{ selected_bucket }}</span></span>
       </div>
     </section>
 
-    <section class="card" style="background: var(--card-bg); padding: 20px; border-radius: 15px; margin-top: 20px;">
+    <section class="card" style="margin-top: 20px;">
       <h2 class="section-title">Live Safety Map</h2>
-      <p class="muted">Zones appearing here have met the minimum threshold of multiple evidence uploads.</p>
+      <p class="muted">Filter by time bucket to view risk changes across the day.</p>
+
+      <div class="time-filter">
+        <button class="time-btn {% if selected_bucket == 'Morning' %}active{% endif %}" data-bucket="Morning" type="button">Morning</button>
+        <button class="time-btn {% if selected_bucket == 'Day' %}active{% endif %}" data-bucket="Day" type="button">Day</button>
+        <button class="time-btn {% if selected_bucket == 'Evening' %}active{% endif %}" data-bucket="Evening" type="button">Evening</button>
+        <button class="time-btn {% if selected_bucket == 'Night' %}active{% endif %}" data-bucket="Night" type="button">Night</button>
+      </div>
+
       <div id="liveMap"></div>
     </section>
   </main>
 
   <script id="zones-data" type="application/json">{{ zones | tojson }}</script>
-  
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // 1. Data Initialization
-    const zonesRaw = document.getElementById('zones-data').textContent;
-    const zones = JSON.parse(zonesRaw);
+    const zonesRaw = document.getElementById('zones-data')?.textContent || '[]';
+    let zones = [];
+    try {
+      zones = JSON.parse(zonesRaw);
+    } catch (err) {
+      console.error('Failed to parse zones JSON:', err);
+      zones = [];
+    }
 
-    // 2. Map Setup (Centered on Thiruvaniyoor/Puthencruz area)
     const map = L.map('liveMap').setView([9.9639, 76.4084], 14);
-
-    // 3. Catchy Dark Mode Tiles
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
 
-    // 4. Plotting logic
-    zones.forEach(zone => {
-      // Draw the zone
-      const circle = L.circle([zone.zone_lat, zone.zone_lng], {
-        color: zone.color,
-        fillColor: zone.color,
-        fillOpacity: 0.4,
-        radius: 150, // 150m radius for the risk zone
-        className: (zone.zone_risk === 'Dangerous' || zone.zone_risk === 'High Risk') ? 'pulse-red' : ''
-      }).addTo(map);
-
-      // Popup Content
-      circle.bindPopup(`
-        <div style="min-width: 200px;">
-          <h3 style="margin:0 0 10px 0; color:${zone.color}; font-size: 1.1rem;">
-            ${zone.zone_risk} RISK ZONE
-          </h3>
-          <p style="margin: 5px 0;"><b>Location:</b> ${zone.location_name}</p>
-          <p style="margin: 5px 0;"><b>Evidence Clips:</b> ${zone.number_of_videos}</p>
-          <p style="margin: 5px 0;"><b>Total Near Misses:</b> ${zone.total_misses}</p>
-          <p style="margin: 5px 0;"><b>Pedestrian Conflicts:</b> ${zone.total_pedestrian_conflicts}</p>
-          <p style="margin: 5px 0;"><b>Location Risk Score:</b> ${zone.location_risk_score ?? 'N/A (need 3 clips)'}</p>
-          <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
-          <a href="/history" style="color: #00d1ff; text-decoration: none; font-weight: bold;">
-            Explore Data Details →
-          </a>
-        </div>
-      `);
-    });
-
-    // 5. Map scale indicator
     L.control.scale({ metric: true, imperial: false }).addTo(map);
 
-    // 6. Risk legend indicator
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function () {
       const div = L.DomUtil.create('div', 'map-legend');
       div.innerHTML = `
-        <div class="legend-item"><span class="legend-dot legend-dangerous"></span>Dangerous</div>
-        <div class="legend-item"><span class="legend-dot legend-high"></span>High Risk</div>
-        <div class="legend-item"><span class="legend-dot legend-moderate"></span>Moderate Risk</div>
-        <div class="legend-item"><span class="legend-dot legend-safe"></span>Safe</div>
-        <div class="legend-item"><span class="legend-dot legend-insufficient"></span>Insufficient Data</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#26D07C;"></span>Low Risk</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#FF9800;"></span>Medium Risk</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#FF2E63;"></span>High Risk</div>
       `;
       return div;
     };
     legend.addTo(map);
+
+    const layers = L.layerGroup().addTo(map);
+
+    function renderZones(list) {
+      layers.clearLayers();
+      const zoneCount = document.getElementById('zoneCount');
+      if (zoneCount) zoneCount.textContent = list.length;
+
+      list.forEach((zone) => {
+        const circle = L.circle([zone.zone_lat, zone.zone_lng], {
+          color: zone.color,
+          fillColor: zone.color,
+          fillOpacity: 0.38,
+          weight: 2,
+          opacity: 0.95,
+          radius: 150,
+          className: zone.risk_level === 'High' ? 'pulse-red' : ''
+        }).addTo(layers);
+
+        circle.bindPopup(`
+          <div style="min-width:220px;">
+            <h3 style="margin:0 0 10px 0; color:${zone.color}; font-size:1.1rem;">${zone.risk_level.toUpperCase()} RISK</h3>
+            <p style="margin:5px 0;"><b>Location:</b> ${zone.location_name || 'Unknown'}</p>
+            <p style="margin:5px 0;"><b>Time Period:</b> ${zone.time_bucket}</p>
+            <p style="margin:5px 0;"><b>Avg Near Misses:</b> ${zone.avg_near_miss_count}</p>
+            <p style="margin:5px 0;"><b>Location Risk Score:</b> ${zone.location_risk_score ?? 'N/A (need 3 clips)'}</p>
+            <p style="margin:5px 0;"><b>Risk Level:</b> ${zone.risk_level}</p>
+            ${zone.raw_risk_level && zone.raw_risk_level !== zone.risk_level ? `<p style="margin:5px 0;"><b>Detailed Level:</b> ${zone.raw_risk_level}</p>` : ''}
+            <p style="margin:5px 0;"><b>Evidence Clips:</b> ${zone.number_of_videos}</p>
+          </div>
+        `);
+      });
+    }
+
+    async function loadBucket(bucket) {
+      try {
+        const res = await fetch(`/api/time-zones?bucket=${encodeURIComponent(bucket)}`);
+        if (!res.ok) throw new Error('Failed to load bucket data');
+        const payload = await res.json();
+        zones = payload.zones || [];
+        renderZones(zones);
+        const bucketEl = document.getElementById('currentBucket');
+        if (bucketEl) bucketEl.textContent = bucket;
+      } catch (err) {
+        console.error('Bucket load failed:', err);
+      }
+    }
+
+    document.querySelectorAll('.time-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.time-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadBucket(btn.dataset.bucket);
+      });
+    });
+
+    renderZones(zones);
+    setTimeout(() => map.invalidateSize(), 50);
   </script>
 </body>
 </html>

@@ -18,9 +18,9 @@
       </nav>
     </header>
 
-    <section class="card hero">
-      <h1>Run A New Road-Safety Analysis</h1>
-      <p>Upload video footage and pin the map location. The pipeline detects near misses, rash driving, and produces zone-ready risk outputs.</p>
+    <section class="card hero hero-glow">
+      <h1>Analyze New Footage</h1>
+      <p>Upload traffic video and pin the map location to run AI near-miss analysis.</p>
     </section>
 
     {% if error %}
@@ -30,31 +30,37 @@
     <section class="grid-2">
       <form method="POST" enctype="multipart/form-data" class="card" id="uploadForm">
         <h2 class="section-title">Input Details</h2>
+
         <label for="video">Traffic Video (MP4/MOV/AVI/MKV)</label>
         <input id="video" name="video" type="file" accept="video/*" required />
 
         <label for="location_name">Location Name (optional)</label>
         <input id="location_name" name="location_name" type="text" placeholder="Example: MG Road Junction, Kochi" />
 
-        <label for="latitude">Coordinates (from History or map)</label>
+        <label for="incident_time">Incident Time (for time-based classification)</label>
+        <input id="incident_time" name="incident_time" type="time" />
+
+        <label for="latitude">Coordinates (from history or map)</label>
         <div class="coord-grid">
           <input id="latitude" name="latitude" type="number" step="any" placeholder="Latitude" required />
           <input id="longitude" name="longitude" type="number" step="any" placeholder="Longitude" required />
         </div>
+
         <div class="action-row">
           <button class="btn-secondary" id="applyCoordsBtn" type="button">Use Coordinates</button>
           <button class="btn-secondary" id="lookupLocationBtn" type="button">Auto-Fill Location Name</button>
         </div>
-        <p id="coordLookupStatus" class="muted"></p>
 
+        <p id="coordLookupStatus" class="muted"></p>
         <p id="coords" class="muted">No location selected</p>
         <p id="processingStatus" class="muted"></p>
+
         <button class="btn" type="submit" id="submitBtn">Process Video</button>
       </form>
 
       <section class="card">
         <h2 class="section-title">Pinpoint Location</h2>
-        <p class="muted">Click on the map to associate this footage with its exact zone.</p>
+        <p class="muted">Click map to set location.</p>
         <div id="map"></div>
       </section>
     </section>

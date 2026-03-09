@@ -44,7 +44,7 @@
                 <small class="muted">{{ report.latitude }}, {{ report.longitude }}</small>
               </td>
               <td>{{ report.near_miss_count }}</td>
-              <td><span class="risk risk-{{ report.risk_level|lower }}">{{ report.risk_level }}</span></td>
+              <td><span class="risk risk-{{ report.risk_level|lower|replace(' ', '-') }}">{{ report.risk_level }}</span></td>
               <td>{{ report.risk_score }}</td>
               <td>
                 <div class="action-row" style="margin-top:0;">
