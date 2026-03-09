@@ -21,6 +21,7 @@ CLASS_NAME_MAP = {
     5: "Bus",
     7: "Truck",
 }
+_MODEL_CACHE: Dict[str, YOLO] = {}
 
 @dataclass
 class Track:
@@ -172,14 +173,17 @@ def classify_risk(count, dur, events):
     epm = (count * 60.0) / max(dur, 1.0)
     severe = sum(1 for e in events if e.get("ttc_s", 99.0) <= 0.6)
     score = (0.8 * count) + (0.25 * epm) + (1.2 * severe)
-    if count >= 40 or epm >= 60 or severe >= 18 or score >= 180: return "HIGH", {"risk_score": round(score, 2), "events_per_min": round(epm, 2), "severe_events": severe}
-    if count >= 12 or epm >= 20 or severe >= 5 or score >= 65: return "MEDIUM", {"risk_score": round(score, 2), "events_per_min": round(epm, 2), "severe_events": severe}
+    # Calibrated to avoid one-level-under labeling in short urban clips.
+    if count >= 20 or epm >= 28 or severe >= 8 or score >= 30:
+        return "HIGH", {"risk_score": round(score, 2), "events_per_min": round(epm, 2), "severe_events": severe}
+    if count >= 6 or epm >= 10 or severe >= 3 or score >= 12:
+        return "MEDIUM", {"risk_score": round(score, 2), "events_per_min": round(epm, 2), "severe_events": severe}
     return "LOW", {"risk_score": round(score, 2), "events_per_min": round(epm, 2), "severe_events": severe}
 
 def risk_color(level): return {"LOW": "green", "MEDIUM": "yellow", "HIGH": "red"}.get(level, "blue")
 
 def detect_objects(model, frame):
-    results = model.predict(source=frame, verbose=False, conf=0.35, imgsz=736, classes=sorted(TARGET_CLASS_IDS))
+    results = model.predict(source=frame, verbose=False, conf=0.35, imgsz=640, classes=sorted(TARGET_CLASS_IDS))
     dets = []
     for r in results:
         if r.boxes is None: continue
@@ -188,13 +192,22 @@ def detect_objects(model, frame):
             dets.append({"class_id": cid, "bbox": (x1, y1, x2, y2), "centroid": ((x1+x2)/2.0, (y1+y2)/2.0)})
     return dets
 
+
+def get_yolo_model(model_path: str) -> YOLO:
+    cached = _MODEL_CACHE.get(model_path)
+    if cached is not None:
+        return cached
+    model = YOLO(model_path)
+    _MODEL_CACHE[model_path] = model
+    return model
+
 def process_video(
     input_video_path, output_video_path, latitude, longitude, location_name="",
     yolo_model_path="yolov8n.pt", distance_threshold=60.0, edge_distance_threshold=28.0,
-    ttc_threshold=0.85, min_relative_speed=14.0, event_cooldown_frames=22, process_every_n_frames=1,
-    max_inference_width=1280, min_risky_streak_frames=3, pair_rearm_safe_frames=6, safe_ttc_rearm_margin=0.8,
+    ttc_threshold=0.85, min_relative_speed=14.0, event_cooldown_frames=22, process_every_n_frames=3,
+    max_inference_width=800, min_risky_streak_frames=3, pair_rearm_safe_frames=6, safe_ttc_rearm_margin=0.8,
     min_track_age_frames=6, min_bbox_area_px=900.0, max_relative_speed_px_s=220.0,
-    min_distance_reduction_px=2.5, motion_pixel_ratio_threshold=0.001, motion_min_area_px=400.0,
+    min_distance_reduction_px=2.5, motion_pixel_ratio_threshold=0.002, motion_min_area_px=500.0,
     motion_bg_history=400, motion_bg_var_threshold=16.0, motion_warmup_frames=20,
     segment_merge_gap_frames=10, highlight_persist_frames=22,
     rash_speed_threshold=70.0, rash_accel_threshold=140.0, rash_turn_threshold_deg=35.0,
@@ -208,7 +221,7 @@ def process_video(
     raw_out_path = out_path.with_name(f"{out_path.stem}_raw.mp4")
     writer = cv2.VideoWriter(str(raw_out_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
 
-    model = YOLO(yolo_model_path)
+    model = get_yolo_model(yolo_model_path)
     bg_sub = cv2.createBackgroundSubtractorMOG2(history=motion_bg_history, varThreshold=motion_bg_var_threshold, detectShadows=False)
     tracker = SimpleCentroidTracker(max_distance=85.0, max_missed_frames=25, max_velocity_px_s=max_relative_speed_px_s)
 
@@ -219,15 +232,19 @@ def process_video(
     track_rash_streak, track_last_rash_frame, track_rash_highlight_until = {}, {}, {}
     rash_events = []
     frames_motion, frames_skipped, frames_infer = 0, 0, 0
+    first_motion_frame = None
 
     while True:
         ok, frame = cap.read()
         if not ok: break
 
-        scale = max_inference_width / frame.shape[1] if frame.shape[1] > max_inference_width else 1.0
-        infer_frame = cv2.resize(frame, (max_inference_width, int(frame.shape[0]*scale))) if scale != 1.0 else frame
-
         should_infer = (frame_idx % process_every_n_frames == 0)
+        scale = 1.0
+        infer_frame = None
+        if should_infer:
+            scale = max_inference_width / frame.shape[1] if frame.shape[1] > max_inference_width else 1.0
+            infer_frame = cv2.resize(frame, (max_inference_width, int(frame.shape[0]*scale))) if scale != 1.0 else frame
+
         motion_confirmed = True
         if should_infer:
             mask = bg_sub.apply(infer_frame)
@@ -235,8 +252,12 @@ def process_video(
                 _, mask = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)
                 moving_ratio = cv2.countNonZero(mask) / mask.size
                 motion_confirmed = moving_ratio >= motion_pixel_ratio_threshold
-                if motion_confirmed: frames_motion += 1
-                else: frames_skipped += 1
+                if motion_confirmed:
+                    frames_motion += 1
+                    if first_motion_frame is None:
+                        first_motion_frame = frame_idx
+                else:
+                    frames_skipped += 1
 
         detections = []
         if should_infer and motion_confirmed:
@@ -249,7 +270,9 @@ def process_video(
                 detections.append({"class_id": d["class_id"], "bbox": (int(x1*inv), int(y1*inv), int(x2*inv), int(y2*inv)), "centroid": (cx*inv, cy*inv)})
 
         tracks = tracker.update(detections, frame_idx, fps)
-        active_ids = [tid for tid, tr in tracks.items() if (frame_idx - tr.last_frame) <= 1]
+        # Keep tracks visible between sparse inference steps.
+        max_track_visual_gap = max(1, process_every_n_frames + 1)
+        active_ids = [tid for tid, tr in tracks.items() if (frame_idx - tr.last_frame) <= max_track_visual_gap]
         active_tracks = [(tid, tracks[tid]) for tid in active_ids]
         near_miss_ids = set()
         rash_ids = set()
@@ -346,6 +369,8 @@ def process_video(
             near_miss_ids.update([id_a, id_b])
             pair_key = tuple(sorted((id_a, id_b)))
             pair_event_armed[pair_key], pair_safe_streak[pair_key] = False, 0
+            track_highlight_until[id_a] = frame_idx + highlight_persist_frames
+            track_highlight_until[id_b] = frame_idx + highlight_persist_frames
             if (frame_idx - pair_last_triggered.get(pair_key, -10000)) > event_cooldown_frames:
                 near_miss_count += 1
                 pair_last_triggered[pair_key] = frame_idx
@@ -354,7 +379,7 @@ def process_video(
 
         for tid, t in active_tracks:
             color = (255, 0, 255) if tid in rash_ids else (0, 255, 0)
-            if tid in near_miss_ids:
+            if tid in near_miss_ids or frame_idx <= track_highlight_until.get(tid, -1):
                 color = (0, 0, 255)
             cv2.rectangle(frame, (t.bbox[0], t.bbox[1]), (t.bbox[2], t.bbox[3]), color, 2)
             if tid in rash_ids and tid not in near_miss_ids:
@@ -394,8 +419,32 @@ def process_video(
             if not zone_risk_eligible
             else ""
         ),
+        "motion_start_s": (
+            round(first_motion_frame / max(fps, 1e-6), 2)
+            if first_motion_frame is not None
+            else None
+        ),
     }
 
 def _ensure_browser_playable(raw, final):
-    subprocess.run(["ffmpeg", "-y", "-i", str(raw), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(final)], capture_output=True)
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(raw),
+            "-c:v",
+            "libx264",
+            "-preset",
+            "ultrafast",
+            "-crf",
+            "30",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            str(final),
+        ],
+        capture_output=True,
+    )
     if final.exists(): raw.unlink()
